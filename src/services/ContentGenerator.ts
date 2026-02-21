@@ -172,7 +172,11 @@ Identifiziere:
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();
-    return JSON.parse(text);
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(`Failed to parse source analysis response: ${text.slice(0, 200)}`);
+    }
   }
 
   private async researchKeywords(keywords: string): Promise<SourceAnalysis> {
@@ -198,7 +202,11 @@ Fokussiere auf aktuelle Standards und praktische Anwendbarkeit.`;
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();
-    return JSON.parse(text);
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(`Failed to parse keyword research response: ${text.slice(0, 200)}`);
+    }
   }
 
   private async generateContent(
@@ -242,7 +250,12 @@ Fokussiere auf aktuelle Standards und praktische Anwendbarkeit.`;
 
     const result = await model.generateContent(userPrompt);
     const text = result.response.text();
-    const data = JSON.parse(text);
+    let data: { title: string; description: string; content: string; tags: string[] };
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(`Failed to parse generated content response: ${text.slice(0, 200)}`);
+    }
 
     return {
       title: data.title,

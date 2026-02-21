@@ -20,7 +20,9 @@ async function publishDuePosts(
     const service = new SchedulerService(new AstroSchedulerDBAdapter());
     const duePosts = await service.getDuePosts();
 
-    if (duePosts.length === 0) return;
+    if (duePosts.length === 0) {
+      return;
+    }
 
     console.log(`[AutoPublisher] Found ${duePosts.length} due post(s)`);
 
