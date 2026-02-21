@@ -1,5 +1,4 @@
 import type { AstroIntegration } from 'astro';
-import { SiteSettings, Prompts, ScheduledPosts } from './db/tables.js';
 
 export interface NcaAiCmsPluginOptions {
   contentPath?: string;
@@ -15,9 +14,9 @@ export default function ncaAiCms(
   return {
     name: 'nca-ai-cms-astro-plugin',
     hooks: {
-      'astro:db:setup'({ extendDb }: { extendDb: (config: { tables: Record<string, unknown> }) => void }) {
+      'astro:db:setup'({ extendDb }) {
         extendDb({
-          tables: { SiteSettings, Prompts, ScheduledPosts },
+          configEntrypoint: new URL('./db/config.ts', import.meta.url),
         });
       },
 

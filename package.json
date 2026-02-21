@@ -9,7 +9,10 @@
     "./domain/entities": "./src/domain/entities/index.ts",
     "./domain/value-objects": "./src/domain/value-objects/index.ts",
     "./utils": "./src/utils/index.ts",
-    "./api/*": "./src/api/*"
+    "./api/*": "./src/api/*",
+    "./pages/*": "./src/pages/*",
+    "./db/*": "./src/db/*",
+    "./middleware.ts": "./src/middleware.ts"
   },
   "scripts": {
     "test": "vitest run",
