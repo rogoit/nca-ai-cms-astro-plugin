@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Prompt, SettingsSubTab } from './types';
 import { styles } from './styles';
 

@@ -66,7 +66,7 @@ export class AstroSchedulerDBAdapter implements SchedulerDBAdapter {
     // Get all rows and filter by date (astro:db doesn't have date comparison operators)
     const all = await db.select().from(ScheduledPosts);
     const dateStr = date.toISOString().split('T')[0];
-    const match = all.find((row) => {
+    const match = all.find((row: ScheduledPostDBRow) => {
       const rowDate = new Date(row.scheduledDate).toISOString().split('T')[0];
       return rowDate === dateStr && row.status !== 'published';
     });

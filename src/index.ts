@@ -15,7 +15,7 @@ export default function ncaAiCms(
   return {
     name: 'nca-ai-cms-astro-plugin',
     hooks: {
-      'astro:db:setup'({ extendDb }) {
+      'astro:db:setup'({ extendDb }: { extendDb: (config: { tables: Record<string, unknown> }) => void }) {
         extendDb({
           tables: { SiteSettings, Prompts, ScheduledPosts },
         });

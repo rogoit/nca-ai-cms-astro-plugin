@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { TabType } from './editor/types';
 import { styles } from './editor/styles';
 import { useTabNavigation } from './editor/useTabNavigation';
@@ -23,7 +23,7 @@ export default function Editor() {
   const { handleTabKeyDown, tabListRef } = useTabNavigation({
     tabCount: TABS.length,
     activeIndex: tabIndex,
-    onActivate: (index) => setActiveTab(TABS[index].key),
+    onActivate: (index) => { const tab = TABS[index]; if (tab) setActiveTab(tab.key); },
   });
 
   const isFullWidth = activeTab !== 'generate';
@@ -41,7 +41,7 @@ export default function Editor() {
           aria-label="Editor-Tabs"
           style={styles.tabNav}
         >
-          {TABS.map((tab, i) => (
+          {TABS.map((tab) => (
             <button
               key={tab.key}
               type="button"

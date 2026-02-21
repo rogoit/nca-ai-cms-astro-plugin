@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { ScheduledPostData } from './types';
 import { styles } from './styles';
 
@@ -49,7 +49,7 @@ export function PlannerTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newInput, setNewInput] = useState('');
-  const [newInputType, setNewInputType] = useState('keyword');
+  const [newInputType] = useState('keyword');
   const [newDate, setNewDate] = useState('');
   const [adding, setAdding] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
