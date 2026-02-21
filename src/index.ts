@@ -21,7 +21,12 @@ export default function ncaAiCms(
         });
       },
 
-      'astro:config:setup'({ injectRoute, updateConfig }) {
+      'astro:config:setup'({ injectRoute, updateConfig, addMiddleware }) {
+        addMiddleware({
+          entrypoint: 'nca-ai-cms-astro-plugin/middleware.ts',
+          order: 'pre',
+        });
+
         // Virtual module for config sharing
         updateConfig({
           vite: {
@@ -99,7 +104,25 @@ export default function ncaAiCms(
             'nca-ai-cms-astro-plugin/api/articles/[id]/regenerate-image.ts',
         });
 
-        // Inject editor page
+        // Inject auth routes
+        injectRoute({
+          pattern: '/api/auth/login',
+          entrypoint: 'nca-ai-cms-astro-plugin/api/auth/login.ts',
+        });
+        injectRoute({
+          pattern: '/api/auth/logout',
+          entrypoint: 'nca-ai-cms-astro-plugin/api/auth/logout.ts',
+        });
+        injectRoute({
+          pattern: '/api/auth/check',
+          entrypoint: 'nca-ai-cms-astro-plugin/api/auth/check.ts',
+        });
+
+        // Inject pages
+        injectRoute({
+          pattern: '/login',
+          entrypoint: 'nca-ai-cms-astro-plugin/pages/login.astro',
+        });
         injectRoute({
           pattern: '/editor',
           entrypoint: 'nca-ai-cms-astro-plugin/pages/editor.astro',

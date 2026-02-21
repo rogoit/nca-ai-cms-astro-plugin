@@ -28,8 +28,9 @@ export default function Editor() {
 
   const isFullWidth = activeTab !== 'generate';
 
-  const handleLogout = () => {
-    window.location.href = '/api/auth/logout';
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
   };
 
   return (
