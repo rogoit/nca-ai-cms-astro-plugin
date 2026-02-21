@@ -1,0 +1,22 @@
+---
+import Editor from '../components/Editor';
+---
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Content Editor</title>
+  <style>
+    body { margin: 0; padding: 2rem; background: var(--color-bg, #0a0a0b); color: var(--color-text, #faf9f7); font-family: system-ui, sans-serif; }
+    .container { max-width: 1400px; margin: 0 auto; }
+    h1 { font-size: 2rem; margin-bottom: 2rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Content Editor</h1>
+    <Editor client:load />
+  </div>
+</body>
+</html>
