@@ -1,7 +1,13 @@
 import type { APIRoute } from 'astro';
+import { z } from 'zod';
 import { SchedulerService } from '../services/SchedulerService';
 import { AstroSchedulerDBAdapter } from '../services/SchedulerDBAdapter';
 import { jsonResponse, jsonError } from './_utils';
+
+const CreateScheduledPostSchema = z.object({
+  input: z.string().min(1, 'input is required'),
+  scheduledDate: z.string().min(1, 'scheduledDate is required'),
+});
 
 function getService(): SchedulerService {
   return new SchedulerService(new AstroSchedulerDBAdapter());
@@ -20,11 +26,12 @@ export const GET: APIRoute = async () => {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const data = await request.json();
-
-    if (!data.input || !data.scheduledDate) {
-      return jsonError('input and scheduledDate are required', 400);
+    const body = await request.json();
+    const parsed = CreateScheduledPostSchema.safeParse(body);
+    if (!parsed.success) {
+      return jsonError(parsed.error.errors[0]?.message ?? 'Invalid request', 400);
     }
+    const data = parsed.data;
 
     const service = getService();
     const post = await service.create({

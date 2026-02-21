@@ -1,23 +1,25 @@
 import type { APIRoute } from 'astro';
 import path from 'node:path';
+import { z } from 'zod';
 import { convertToWebP } from '../services/ImageConverter';
 import { jsonResponse, jsonError } from './_utils';
 
+const SaveImageSchema = z.object({
+  url: z.string().regex(/^data:image\/\w+;base64,.+$/, 'Invalid image data URL'),
+  folderPath: z.string().min(1, 'folderPath is required'),
+});
+
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { url, folderPath } = await request.json();
-
-    if (!url || !folderPath) {
-      return jsonError('URL and folderPath are required', 400);
+    const body = await request.json();
+    const parsed = SaveImageSchema.safeParse(body);
+    if (!parsed.success) {
+      return jsonError(parsed.error.errors[0]?.message ?? 'Invalid request', 400);
     }
+    const { url, folderPath } = parsed.data;
 
-    // Extract base64 data from data URL
-    const base64Match = url.match(/^data:image\/\w+;base64,(.+)$/);
-    if (!base64Match) {
-      return jsonError('Invalid image data URL', 400);
-    }
-
-    const base64Data = base64Match[1];
+    // Regex is guaranteed to match since Zod already validated the format
+    const base64Data = url.split(',')[1]!;
 
     // Save hero.webp in the article folder
     const filepath = path.join(folderPath, 'hero.webp');
