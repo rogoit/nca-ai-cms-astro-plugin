@@ -30,8 +30,8 @@ export function SettingsTab() {
     try {
       const res = await fetch('/api/prompts');
       if (!res.ok) throw new Error('Fehler beim Laden der Einstellungen');
-      const data = (await res.json()) as Prompt[];
-      setPrompts(data);
+      const data = await res.json();
+      setPrompts(Array.isArray(data.prompts) ? data.prompts : []);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten',
