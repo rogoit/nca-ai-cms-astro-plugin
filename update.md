@@ -1,3 +1,21 @@
+# v1.0.5
+
+## Fix: SettingsTab crash on prompts response
+- `/api/prompts` returns `{ prompts, settings }` but SettingsTab cast the entire response as `Prompt[]`
+- Fixed to extract `data.prompts` from the response object
+
+## Auto-register dependencies
+- Plugin now auto-configures `output: 'server'`, `@astrojs/node` adapter, `react()`, and `db()` via `updateConfig()`
+- Consumer config is now just `integrations: [ncaAiCms()]`
+- Existing manual config is respected — auto-registration only kicks in when not already set
+
+## Setup guide in README
+- Full install command with all peer dependencies
+- `.env.local` setup with variable reference table
+- Minimal `astro.config.mjs` example
+
+---
+
 # v1.0.4
 
 ## Fix: Environment variables and route prerendering

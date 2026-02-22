@@ -16,13 +16,14 @@ An Astro plugin that adds an AI-powered content editor to your site. Generate ar
 ### 1. Install
 
 ```bash
-npm install nca-ai-cms-astro-plugin
+npm install nca-ai-cms-astro-plugin @astrojs/node @astrojs/react @astrojs/db react react-dom @google/genai @google/generative-ai gray-matter marked sanitize-html sharp turndown zod
 ```
 
 ### 2. Add to your Astro config
 
-```ts
+```js
 // astro.config.mjs
+import { defineConfig } from 'astro/config';
 import ncaAiCms from 'nca-ai-cms-astro-plugin';
 
 export default defineConfig({
@@ -30,24 +31,36 @@ export default defineConfig({
 });
 ```
 
-### 3. Environment variables
+The plugin auto-registers `react()`, `db()`, `output: 'server'`, and the `@astrojs/node` adapter. You can still set them manually if you need custom options.
+
+### 3. Create `.env.local`
 
 ```env
+EDITOR_ADMIN=admin
+EDITOR_PASSWORD=your-secure-password
 GOOGLE_GEMINI_API_KEY=your-gemini-api-key
-EDITOR_ADMIN=your-username
-EDITOR_PASSWORD=your-password
 ```
 
-| Variable | Required | Description |
+| Variable | Required | Purpose |
 |---|---|---|
+| `EDITOR_ADMIN` | Yes | Login username for the editor |
+| `EDITOR_PASSWORD` | Yes | Login password for the editor |
 | `GOOGLE_GEMINI_API_KEY` | Yes | Google Gemini API key for content and image generation |
-| `EDITOR_ADMIN` | Yes | Username for editor login |
-| `EDITOR_PASSWORD` | Yes | Password for editor login |
 
-### 4. Requirements
+Add `.env.local` to your `.gitignore` — never commit secrets.
+
+### 4. Start the dev server
+
+```bash
+npx astro dev
+```
+
+- Login: http://localhost:4321/login
+- Editor: http://localhost:4321/editor (redirects to login if not authenticated)
+
+### Requirements
 
 - Astro 5+
-- `@astrojs/db` and `@astrojs/react` integrations
 - Node.js 18+
 
 ## Options
