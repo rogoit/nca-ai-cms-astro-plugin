@@ -1,3 +1,20 @@
+# v1.0.6
+
+## Separate settings from prompts in SettingsTab
+- Homepage and Website tabs now show key-value settings forms (hero text, zielgruppe, CTA, core tags, etc.)
+- Content-KI, Analyse-KI, and Bild-KI tabs show prompt card UI with create/edit/delete
+- Settings are saved via `POST /api/prompts` with `type: setting`
+- Each settings tab has defined fields: homepage (hero, zielgruppe, ton, kernbotschaft), website (CTA, tags, markenrichtlinien)
+
+## Category guides and custom prompts
+- Empty prompt categories show content marketing guidance with concrete examples
+- New "+ Neuen Prompt hinzufuegen" button to create custom prompts
+- Each prompt card now has a delete button
+- API: added POST with `action: create` and DELETE endpoint for prompts
+- PromptService: added `createPrompt()` and `deletePrompt()` methods
+
+---
+
 # v1.0.5
 
 ## Fix: SettingsTab crash on prompts response
