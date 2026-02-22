@@ -1,4 +1,7 @@
 import type { AstroIntegration } from 'astro';
+import react from '@astrojs/react';
+import db from '@astrojs/db';
+import node from '@astrojs/node';
 
 export interface NcaAiCmsPluginOptions {
   contentPath?: string;
@@ -20,10 +23,27 @@ export default function ncaAiCms(
         });
       },
 
-      'astro:config:setup'({ injectRoute, updateConfig, addMiddleware }) {
+      'astro:config:setup'({ injectRoute, updateConfig, addMiddleware, config }) {
         addMiddleware({
           entrypoint: 'nca-ai-cms-astro-plugin/middleware.ts',
           order: 'pre',
+        });
+
+        // Auto-register react and db integrations if not already present
+        const hasReact = config.integrations.some((i) => i.name === '@astrojs/react');
+        if (!hasReact) {
+          config.integrations.push(react());
+        }
+
+        const hasDb = config.integrations.some((i) => i.name === '@astrojs/db');
+        if (!hasDb) {
+          config.integrations.push(...(db() as unknown as AstroIntegration[]));
+        }
+
+        // Auto-configure server output and node adapter
+        updateConfig({
+          output: 'server' as const,
+          adapter: node({ mode: 'standalone' }),
         });
 
         // Virtual module for config sharing
