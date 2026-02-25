@@ -1,3 +1,20 @@
+# v1.0.8
+
+## Generalize content generator for any topic
+- Removed hardcoded accessibility/Barrierefreiheit references from all prompts
+- `analyzeSource` now uses `systemInstruction` consistently with `researchKeywords` and `generateContent`
+- Default system prompt uses topic-agnostic language ("zum jeweiligen Thema" instead of "zur Barrierefreiheit")
+- Removed hardcoded keyword integration rule from default system prompt
+- Default core tags changed from accessibility-specific to general (`Web-Entwicklung`, `Best Practices`)
+- Default contact URL updated to generic contact page
+- Domain specialization now lives entirely in configurable database prompts
+
+## Fix: updateSetting upsert
+- `PromptService.updateSetting()` now inserts if key doesn't exist instead of silently doing nothing
+- Enables creating new settings through the settings UI without pre-seeding the database
+
+---
+
 # v1.0.6
 
 ## Separate settings from prompts in SettingsTab
