@@ -58,10 +58,24 @@ export class PromptService {
   }
 
   async updateSetting(key: string, value: string): Promise<void> {
-    await db
-      .update(SiteSettings)
-      .set({ value, updatedAt: new Date() })
-      .where(eq(SiteSettings.key, key));
+    const existing = await db
+      .select()
+      .from(SiteSettings)
+      .where(eq(SiteSettings.key, key))
+      .get();
+
+    if (existing) {
+      await db
+        .update(SiteSettings)
+        .set({ value, updatedAt: new Date() })
+        .where(eq(SiteSettings.key, key));
+    } else {
+      await db.insert(SiteSettings).values({
+        key,
+        value,
+        updatedAt: new Date(),
+      });
+    }
   }
 
   async getAllSettings(): Promise<Array<{ key: string; value: string }>> {
@@ -88,11 +102,11 @@ export class PromptService {
 
   async getCoreTags(): Promise<string[]> {
     const tags = await this.getSetting('core_tags');
-    if (!tags) return ['Semantik', 'HTML', 'Barrierefrei'];
+    if (!tags) return ['Web-Entwicklung', 'Best Practices'];
     try {
       return JSON.parse(tags);
     } catch {
-      return ['Semantik', 'HTML', 'Barrierefrei'];
+      return ['Web-Entwicklung', 'Best Practices'];
     }
   }
 }

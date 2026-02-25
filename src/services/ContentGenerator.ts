@@ -32,21 +32,21 @@ interface SourceAnalysis {
 
 // Fallback values when database is not available
 const DEFAULT_CONTACT_URL =
-  'https://nevercodealone.de/de/landingpages/barrierefreies-webdesign';
+  'https://nevercodealone.de/de/kontakt';
 
-const DEFAULT_CORE_TAGS = ['Semantik', 'HTML', 'Barrierefrei'];
+const DEFAULT_CORE_TAGS = ['Web-Entwicklung', 'Best Practices'];
 
 const DEFAULT_SYSTEM_PROMPT = `Du bist ein erfahrener technischer Content-Writer für Web-Entwicklung.
 Deine Aufgabe ist es, hochwertige deutsche Fachartikel zu erstellen.
 
-Zielgruppe: Content-Marketing-Professionals und Frontend-Entwickler
+Zielgruppe: Content-Marketing-Professionals und Entwickler
 Tonalität: Professionell, aber zugänglich. Technisch korrekt, nicht übermäßig akademisch.
 
 KRITISCH - 100% Originalität:
 - Schreibe einen KOMPLETT EIGENSTÄNDIGEN Artikel
 - KEINE Sätze, Formulierungen oder Strukturen aus externen Quellen übernehmen
 - KEINE Hinweise auf Quellen, Referenzen oder Inspiration im Text
-- Nutze ausschließlich DEIN Expertenwissen zur Barrierefreiheit
+- Nutze ausschließlich DEIN Expertenwissen zum jeweiligen Thema
 - Jeder Satz muss NEU formuliert sein - wie von einem Experten geschrieben
 - Der Artikel muss wirken als käme er aus eigener Fachkenntnis
 
@@ -57,7 +57,6 @@ Regeln:
 - WICHTIG: Content MUSS mit einer H1-Überschrift (# Titel) beginnen
 - Danach H2 (##) und H3 (###) Hierarchie ohne Sprünge
 - WICHTIG: Nur Markdown, KEINE HTML-Tags wie <p>, <div>, <span> etc.
-- WICHTIG: Integriere die Keywords "Semantik", "HTML" und "Barrierefrei" natürlich in den Text
 
 Titel-Regeln:
 - Das Hauptthema/Keyword MUSS im Titel vorkommen
@@ -148,8 +147,10 @@ export class ContentGenerator {
   private async analyzeSource(
     fetched: FetchedContent
   ): Promise<SourceAnalysis> {
+    const systemPrompt = await this.buildSystemPrompt();
     const model = this.client.getGenerativeModel({
       model: this.model,
+      systemInstruction: systemPrompt,
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: buildSourceAnalysisSchema(),
@@ -165,7 +166,7 @@ Inhalt:
 ${fetched.content.slice(0, 12000)}
 
 Identifiziere:
-1. Das Hauptthema (fokussiert auf Web-Entwicklung/Barrierefreiheit)
+1. Das Hauptthema
 2. Die wichtigsten Kernaussagen
 3. Besondere Erkenntnisse oder einzigartige Tipps
 4. Relevante Code-Beispiele oder Patterns`;
@@ -180,23 +181,23 @@ Identifiziere:
   }
 
   private async researchKeywords(keywords: string): Promise<SourceAnalysis> {
+    const systemPrompt = await this.buildSystemPrompt();
     const model = this.client.getGenerativeModel({
       model: this.model,
+      systemInstruction: systemPrompt,
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: buildSourceAnalysisSchema(),
       },
     });
 
-    const prompt = `Du bist ein Experte für Web-Accessibility und barrierefreie Webentwicklung.
-
-Recherchiere zum Thema: "${keywords}"
+    const prompt = `Recherchiere zum Thema: "${keywords}"
 
 Nutze dein Fachwissen um:
-1. Das Hauptthema klar zu definieren (Bezug zu Barrierefreiheit/Web-Accessibility)
-2. Die wichtigsten Fakten, Best Practices und WCAG-Richtlinien zusammenzufassen
+1. Das Hauptthema klar zu definieren
+2. Die wichtigsten Fakten, Best Practices und Standards zusammenzufassen
 3. Weniger bekannte aber wichtige Tipps und Erkenntnisse zu identifizieren
-4. Praktische Code-Beispiele oder Patterns vorzuschlagen
+4. Praktische Beispiele oder Patterns vorzuschlagen
 
 Fokussiere auf aktuelle Standards und praktische Anwendbarkeit.`;
 
@@ -296,13 +297,13 @@ Fokussiere auf aktuelle Standards und praktische Anwendbarkeit.`;
   }
 
   private buildUserPrompt(analysis: SourceAnalysis): string {
-    return `Schreibe als Accessibility-Experte einen deutschen Fachartikel zum Thema: ${analysis.topic}
+    return `Schreibe einen deutschen Fachartikel zum Thema: ${analysis.topic}
 
 Behandle diese Aspekte aus deinem Fachwissen:
 ${analysis.keyPoints.map((p) => `- ${p}`).join('\n')}
 ${analysis.uniqueInsights.map((p) => `- ${p}`).join('\n')}
 
-${analysis.codeExamples.length > 0 ? `Zeige praktische Code-Beispiele für:\n${analysis.codeExamples.map((c) => `- ${c}`).join('\n')}` : ''}
+${analysis.codeExamples.length > 0 ? `Zeige praktische Beispiele für:\n${analysis.codeExamples.map((c) => `- ${c}`).join('\n')}` : ''}
 
 Wichtig: Schreibe komplett eigenständig aus deiner Expertise heraus.`;
   }
