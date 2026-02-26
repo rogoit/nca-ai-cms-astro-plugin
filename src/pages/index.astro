@@ -20,13 +20,13 @@ const getSetting = async (key: string, fallback: string) => {
 
 const heroKicker = await getSetting(
   'hero_kicker',
-  'Web Accessibility Expertise'
+  ''
 );
-const heroTitle = await getSetting('hero_title', 'NCA Content');
-const heroTitleAccent = await getSetting('hero_title_accent', 'Marketing');
+const heroTitle = await getSetting('hero_headline', '');
+const heroTitleAccent = await getSetting('hero_title_accent', '');
 const heroDescription = await getSetting(
-  'hero_description',
-  'Fachartikel für barrierefreie Webentwicklung und digitale Inklusion'
+  'hero_text',
+  ''
 );
 
 // Check if user is authenticated

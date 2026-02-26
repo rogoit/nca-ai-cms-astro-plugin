@@ -14,7 +14,9 @@ const SETTINGS_TABS: SettingsSubTab[] = ['homepage', 'website'];
 
 const SETTINGS_FIELDS: Record<string, { key: string; label: string; type: 'input' | 'textarea' }[]> = {
   homepage: [
+    { key: 'hero_kicker', label: 'Hero Kicker', type: 'input' },
     { key: 'hero_headline', label: 'Hero Ueberschrift', type: 'input' },
+    { key: 'hero_title_accent', label: 'Hero Akzent-Text', type: 'input' },
     { key: 'hero_text', label: 'Hero Text', type: 'textarea' },
     { key: 'target_audience', label: 'Zielgruppe', type: 'input' },
     { key: 'tone', label: 'Tonalitaet', type: 'input' },
