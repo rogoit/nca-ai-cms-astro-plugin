@@ -153,7 +153,17 @@ export default function ncaAiCms(
           prerender: false,
         });
 
-        // Inject pages
+        // Inject frontend pages
+        injectRoute({
+          pattern: '/',
+          entrypoint: 'nca-ai-cms-astro-plugin/pages/index.astro',
+          prerender: false,
+        });
+        injectRoute({
+          pattern: '/articles/[...slug]',
+          entrypoint: 'nca-ai-cms-astro-plugin/pages/articles/[...slug].astro',
+          prerender: false,
+        });
         injectRoute({
           pattern: '/login',
           entrypoint: 'nca-ai-cms-astro-plugin/pages/login.astro',
@@ -162,6 +172,25 @@ export default function ncaAiCms(
         injectRoute({
           pattern: '/editor',
           entrypoint: 'nca-ai-cms-astro-plugin/pages/editor.astro',
+          prerender: false,
+        });
+
+        // Inject article image serving
+        injectRoute({
+          pattern: '/api/article-image/[...path]',
+          entrypoint: 'nca-ai-cms-astro-plugin/pages/api/article-image/[...path].ts',
+          prerender: false,
+        });
+
+        // Inject SEO routes
+        injectRoute({
+          pattern: '/robots.txt',
+          entrypoint: 'nca-ai-cms-astro-plugin/pages/robots.txt.ts',
+          prerender: false,
+        });
+        injectRoute({
+          pattern: '/sitemap.xml',
+          entrypoint: 'nca-ai-cms-astro-plugin/pages/sitemap.xml.ts',
           prerender: false,
         });
       },
