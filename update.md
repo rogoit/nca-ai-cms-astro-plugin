@@ -1,3 +1,18 @@
+# v1.0.18
+
+## Fix: DB upload reconnects client after file replacement
+- After writing the new SQLite file, the libsql client is closed and reconnected via `db.$client.close()` / `db.$client.reconnect()`
+- Close and reconnect calls are now properly awaited to prevent race conditions with async DB operations
+- Changes from uploaded database are immediately visible without node restart
+- Graceful fallback: if reconnect is not available, upload still succeeds (manual restart needed)
+
+## Tests: DB upload endpoint coverage
+- 10 tests covering upload endpoint — validation, backup, reconnect behavior, size limits
+- Added size limit rejection tests for both `multipart/form-data` and `application/octet-stream` content types
+- Tests verify 50 MB max file size is enforced with proper 413 status response
+
+---
+
 # v1.0.17
 
 ## Feature: Database download/upload via Editor UI
