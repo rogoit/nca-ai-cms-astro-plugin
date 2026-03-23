@@ -2,6 +2,8 @@ import type { APIRoute } from 'astro';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { jsonResponse, jsonError } from '../_utils';
+// @ts-ignore - resolved by Astro build pipeline
+import { db } from 'astro:db';
 
 const MAX_DB_SIZE = 50 * 1024 * 1024; // 50 MB
 
@@ -63,6 +65,17 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     await fs.writeFile(dbPath, dbBuffer);
+
+    // Reconnect DB client to pick up the new file
+    try {
+      const client = (db as any).$client;
+      if (client?.close && client?.reconnect) {
+        await client.close();
+        await client.reconnect();
+      }
+    } catch {
+      // Reconnect not available — manual restart needed
+    }
 
     return jsonResponse({
       success: true,
