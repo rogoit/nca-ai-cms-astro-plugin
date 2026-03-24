@@ -1,5 +1,4 @@
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -20,69 +19,64 @@ function createSqliteBuffer(size = 4096): Buffer {
 
 let tmpDir: string;
 
-before(async () => {
+beforeAll(async () => {
   tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'db-upload-test-'));
 });
 
-after(async () => {
+afterAll(async () => {
   await fs.rm(tmpDir, { recursive: true, force: true });
 });
 
 describe('validateSqliteHeader', () => {
   it('returns true for a valid SQLite buffer', () => {
-    const buf = createSqliteBuffer();
-    assert.equal(validateSqliteHeader(buf), true);
+    expect(validateSqliteHeader(createSqliteBuffer())).toBe(true);
   });
 
   it('rejects a buffer that does not start with "SQLite format 3"', () => {
-    const buf = Buffer.from('not a sqlite file at all');
-    assert.equal(validateSqliteHeader(buf), false);
+    expect(validateSqliteHeader(Buffer.from('not a sqlite file at all'))).toBe(false);
   });
 
   it('rejects an empty buffer', () => {
-    const buf = Buffer.alloc(0);
-    assert.equal(validateSqliteHeader(buf), false);
+    expect(validateSqliteHeader(Buffer.alloc(0))).toBe(false);
   });
 
   it('rejects a buffer shorter than 16 bytes', () => {
-    const buf = Buffer.from('SQLite');
-    assert.equal(validateSqliteHeader(buf), false);
+    expect(validateSqliteHeader(Buffer.from('SQLite'))).toBe(false);
   });
 
   it('rejects a buffer with similar but incorrect header', () => {
     const buf = Buffer.alloc(4096);
     Buffer.from('SQLite format 2\0').copy(buf);
-    assert.equal(validateSqliteHeader(buf), false);
+    expect(validateSqliteHeader(buf)).toBe(false);
   });
 
   it('accepts a minimal 16-byte valid header', () => {
-    const buf = Buffer.from('SQLite format 3\0');
-    assert.equal(validateSqliteHeader(buf), true);
+    expect(validateSqliteHeader(Buffer.from('SQLite format 3\0'))).toBe(true);
   });
 });
 
 describe('validateFileSize', () => {
-  const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
+  const MAX_SIZE = 50 * 1024 * 1024;
 
   it('accepts a file within the size limit', () => {
-    assert.equal(validateFileSize(1024, MAX_SIZE), true);
+    expect(validateFileSize(1024, MAX_SIZE)).toBe(true);
   });
 
   it('accepts a file exactly at the size limit', () => {
-    assert.equal(validateFileSize(MAX_SIZE, MAX_SIZE), true);
+    expect(validateFileSize(MAX_SIZE, MAX_SIZE)).toBe(true);
   });
 
   it('rejects a file exceeding the size limit', () => {
-    assert.equal(validateFileSize(MAX_SIZE + 1, MAX_SIZE), false);
+    expect(validateFileSize(MAX_SIZE + 1, MAX_SIZE)).toBe(false);
   });
 
   it('accepts zero-byte files', () => {
-    assert.equal(validateFileSize(0, MAX_SIZE), true);
+    expect(validateFileSize(0, MAX_SIZE)).toBe(true);
   });
 
   it('uses default 50MB max when no maxSize is provided', () => {
-    assert.equal(validateFileSize(MAX_SIZE), true);
-    assert.equal(validateFileSize(MAX_SIZE + 1), false);
+    expect(validateFileSize(MAX_SIZE)).toBe(true);
+    expect(validateFileSize(MAX_SIZE + 1)).toBe(false);
   });
 });
 
@@ -95,12 +89,12 @@ describe('backupDatabase', () => {
     await backupDatabase(dbPath);
 
     const backupContent = await fs.readFile(`${dbPath}.backup`);
-    assert.deepEqual(backupContent, originalContent);
+    expect(Buffer.compare(backupContent, originalContent)).toBe(0);
   });
 
   it('does not throw when the source file does not exist', async () => {
     const dbPath = path.join(tmpDir, 'nonexistent.db');
-    await assert.doesNotReject(() => backupDatabase(dbPath));
+    await expect(backupDatabase(dbPath)).resolves.toBeUndefined();
   });
 
   it('overwrites a previous backup', async () => {
@@ -115,7 +109,7 @@ describe('backupDatabase', () => {
     await backupDatabase(dbPath);
 
     const backupContent = await fs.readFile(`${dbPath}.backup`);
-    assert.deepEqual(backupContent, secondContent);
+    expect(Buffer.compare(backupContent, secondContent)).toBe(0);
   });
 });
 
@@ -127,7 +121,7 @@ describe('writeDatabaseFile', () => {
     await writeDatabaseFile(dbPath, content);
 
     const written = await fs.readFile(dbPath);
-    assert.deepEqual(written, content);
+    expect(Buffer.compare(written, content)).toBe(0);
   });
 
   it('overwrites an existing file', async () => {
@@ -139,8 +133,7 @@ describe('writeDatabaseFile', () => {
     await writeDatabaseFile(dbPath, newContent);
 
     const written = await fs.readFile(dbPath);
-    assert.deepEqual(written, newContent);
-    assert.notDeepEqual(written, oldContent);
+    expect(Buffer.compare(written, newContent)).toBe(0);
   });
 
   it('written file is byte-for-byte identical to the uploaded buffer', async () => {
@@ -153,8 +146,8 @@ describe('writeDatabaseFile', () => {
     await writeDatabaseFile(dbPath, content);
 
     const written = await fs.readFile(dbPath);
-    assert.equal(written.length, content.length);
-    assert.equal(Buffer.compare(written, content), 0);
+    expect(written.length).toBe(content.length);
+    expect(Buffer.compare(written, content)).toBe(0);
   });
 });
 
@@ -172,9 +165,9 @@ describe('full upload flow (backup + write)', () => {
     await writeDatabaseFile(dbPath, newContent);
 
     const currentDb = await fs.readFile(dbPath);
-    assert.deepEqual(currentDb, newContent);
+    expect(Buffer.compare(currentDb, newContent)).toBe(0);
 
     const backupDb = await fs.readFile(`${dbPath}.backup`);
-    assert.deepEqual(backupDb, oldContent);
+    expect(Buffer.compare(backupDb, oldContent)).toBe(0);
   });
 });

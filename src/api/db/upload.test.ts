@@ -1,24 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as fs from 'fs/promises';
 
-const mockClose = vi.fn();
-const mockReconnect = vi.fn();
-
-vi.mock('astro:db', () => ({
-  db: {
-    $client: {
-      close: mockClose,
-      reconnect: mockReconnect,
-    },
-  },
+vi.mock('../../utils/dbUploadUtils.js', () => ({
+  validateSqliteHeader: vi.fn((buf: Buffer) => {
+    const header = buf.subarray(0, 16).toString('utf8');
+    return header.startsWith('SQLite format 3');
+  }),
+  validateFileSize: vi.fn((size: number, max: number) => size <= max),
+  backupDatabase: vi.fn().mockResolvedValue(undefined),
+  writeDatabaseFile: vi.fn().mockResolvedValue(undefined),
+  getDbPath: vi.fn(() => '.astro/content.db'),
+  restartNodeProcess: vi.fn(),
 }));
 
-vi.mock('fs/promises', () => ({
-  writeFile: vi.fn().mockResolvedValue(undefined),
-  copyFile: vi.fn().mockResolvedValue(undefined),
-}));
-
-// SQLite file header
 const SQLITE_HEADER = Buffer.from('SQLite format 3\0');
 
 function createSqliteBuffer(size = 4096): Buffer {
@@ -47,7 +40,6 @@ function createOctetStreamRequest(file: Buffer): Request {
 describe('DB Upload API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.ASTRO_DATABASE_FILE = '.astro/content.db';
   });
 
   it('accepts a valid SQLite file via multipart/form-data', async () => {
@@ -118,21 +110,22 @@ describe('DB Upload API', () => {
 
   it('creates a backup before writing', async () => {
     const { POST } = await import('./upload.js');
+    const { backupDatabase } = await import('../../utils/dbUploadUtils.js');
     const request = createFormDataRequest(createSqliteBuffer());
 
     await POST({ request } as any);
 
-    expect(fs.copyFile).toHaveBeenCalled();
+    expect(backupDatabase).toHaveBeenCalled();
   });
 
-  it('reconnects the DB client after successful upload', async () => {
+  it('calls restartNodeProcess after successful upload', async () => {
     const { POST } = await import('./upload.js');
+    const { restartNodeProcess } = await import('../../utils/dbUploadUtils.js');
     const request = createFormDataRequest(createSqliteBuffer());
 
     await POST({ request } as any);
 
-    expect(mockClose).toHaveBeenCalledOnce();
-    expect(mockReconnect).toHaveBeenCalledOnce();
+    expect(restartNodeProcess).toHaveBeenCalledOnce();
   });
 
   it('rejects oversized file via multipart/form-data', async () => {
@@ -159,15 +152,13 @@ describe('DB Upload API', () => {
     expect(data.error).toContain('too large');
   });
 
-  it('still succeeds if reconnect is not available', async () => {
+  it('includes deprecation notice in response', async () => {
     const { POST } = await import('./upload.js');
-    mockClose.mockImplementation(() => { throw new Error('not available'); });
-
     const request = createFormDataRequest(createSqliteBuffer());
+
     const response = await POST({ request } as any);
     const data = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(data.success).toBe(true);
+    expect(data.deprecated).toContain('/api/db/import');
   });
 });
