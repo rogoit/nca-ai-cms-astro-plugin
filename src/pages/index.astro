@@ -4,7 +4,6 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { db, SiteSettings, eq } from 'astro:db';
 import Layout from '../layouts/Layout.astro';
-import DeleteAction from '../components/frontend/DeleteAction.astro';
 import { ArticleService } from '../services/ArticleService';
 import { escapeJsonLd } from '../utils/sanitize';
 
@@ -128,14 +127,6 @@ const homeJsonLd = {
                 href={`/articles/${featuredArticle.articleId}`}
                 class="featured-card"
               >
-                {isAuthenticated && (
-                  <DeleteAction
-                    articleId={
-                      featuredArticle.articleId.split('/').pop() ||
-                      featuredArticle.articleId
-                    }
-                  />
-                )}
                 <div class="featured-card-image img-zoom">
                   {featuredArticle.image ? (
                     <Image
@@ -198,14 +189,6 @@ const homeJsonLd = {
                       { 'article-card--wide': index % 5 === 0 },
                     ]}
                   >
-                    {isAuthenticated && (
-                      <DeleteAction
-                        articleId={
-                          article.articleId.split('/').pop() ||
-                          article.articleId
-                        }
-                      />
-                    )}
                     <div class="article-card-image img-zoom">
                       {article.image ? (
                         <Image

@@ -60,6 +60,18 @@ const { articleId, markdown, title, description, isAuthenticated } = Astro.props
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
+        <span class="inline-toolbar-spacer"></span>
+        <button
+          type="button"
+          class="inline-delete-btn"
+          aria-label="Artikel löschen"
+          title="Artikel löschen"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          </svg>
+        </button>
       </div>
     )}
 
@@ -143,6 +155,22 @@ const { articleId, markdown, title, description, isAuthenticated } = Astro.props
 
   .inline-cancel-btn:hover {
     background: #fecaca !important;
+  }
+
+  .inline-toolbar-spacer {
+    flex: 1;
+  }
+
+  .inline-delete-btn {
+    background: transparent !important;
+    color: #94a3b8 !important;
+    border-color: transparent !important;
+  }
+
+  .inline-delete-btn:hover {
+    background: #fef2f2 !important;
+    color: #dc2626 !important;
+    border-color: #fecaca !important;
   }
 
   .inline-editor-field {
@@ -232,6 +260,7 @@ const { articleId, markdown, title, description, isAuthenticated } = Astro.props
     const regenBtn = el.querySelector('.inline-regenerate-btn') as HTMLButtonElement;
     const applyBtn = el.querySelector('.inline-apply-btn') as HTMLButtonElement;
     const cancelBtn = el.querySelector('.inline-cancel-btn') as HTMLButtonElement;
+    const deleteBtn = el.querySelector('.inline-delete-btn') as HTMLButtonElement;
     const rendered = el.querySelector('.inline-editor-rendered') as HTMLElement;
     const editing = el.querySelector('.inline-editor-editing') as HTMLElement;
     const preview = el.querySelector('.inline-editor-preview') as HTMLElement;
@@ -254,6 +283,7 @@ const { articleId, markdown, title, description, isAuthenticated } = Astro.props
       regenBtn.hidden = mode !== 'view';
       applyBtn.hidden = mode === 'view';
       cancelBtn.hidden = mode === 'view';
+      deleteBtn.hidden = mode !== 'view';
     };
 
     // Edit mode
@@ -339,6 +369,26 @@ const { articleId, markdown, title, description, isAuthenticated } = Astro.props
       } finally {
         regenBtn.disabled = false;
         regenBtn.classList.remove('loading');
+      }
+    });
+
+    // Delete article
+    deleteBtn?.addEventListener('click', async () => {
+      if (!confirm('Artikel wirklich löschen? Dies kann nicht rückgängig gemacht werden.')) return;
+      deleteBtn.disabled = true;
+
+      try {
+        deleteBtn.classList.add('loading');
+        const res = await fetch(`/api/articles/${articleId}`, {
+          method: 'DELETE',
+          credentials: 'same-origin',
+        });
+        if (!res.ok) throw new Error('Löschen fehlgeschlagen');
+        window.location.href = '/';
+      } catch {
+        alert('Artikel konnte nicht gelöscht werden');
+        deleteBtn.disabled = false;
+        deleteBtn.classList.remove('loading');
       }
     });
 
