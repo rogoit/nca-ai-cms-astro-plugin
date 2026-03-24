@@ -1,0 +1,307 @@
+---
+interface Props {
+  articleId: string;
+  markdown: string;
+  isAuthenticated?: boolean;
+}
+
+const { articleId, markdown, isAuthenticated } = Astro.props;
+---
+
+<div class="inline-editor-wrapper" data-article-id={articleId} data-authenticated={isAuthenticated ? 'true' : 'false'}>
+  <div class="inline-editor-content">
+    {isAuthenticated && (
+      <div class="inline-editor-toolbar">
+        <button
+          type="button"
+          class="inline-edit-btn"
+          aria-label="Inhalt bearbeiten"
+          title="Inhalt bearbeiten"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="inline-regenerate-btn"
+          aria-label="Text neu generieren"
+          title="Text neu generieren"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6" />
+            <path d="M1 20v-6h6" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="inline-apply-btn"
+          hidden
+          aria-label="Änderungen übernehmen"
+          title="Speichern"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="inline-cancel-btn"
+          hidden
+          aria-label="Abbrechen"
+          title="Abbrechen"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+    )}
+
+    <!-- Rendered content (slot) -->
+    <div class="inline-editor-rendered">
+      <slot />
+    </div>
+
+    <!-- Markdown editor (hidden by default) -->
+    <div class="inline-editor-editing" hidden>
+      <textarea class="inline-editor-textarea">{markdown}</textarea>
+    </div>
+
+    <!-- Regenerated preview (hidden by default) -->
+    <div class="inline-editor-preview" hidden></div>
+  </div>
+</div>
+
+<style>
+  .inline-editor-wrapper {
+    position: relative;
+  }
+
+  .inline-editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .inline-editor-toolbar button {
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .inline-editor-toolbar button:hover {
+    background: #e2e8f0;
+    color: #334155;
+  }
+
+  .inline-edit-btn.active {
+    background: #3b82f6 !important;
+    color: white !important;
+    border-color: #3b82f6 !important;
+  }
+
+  .inline-apply-btn {
+    background: #dcfce7 !important;
+    color: #16a34a !important;
+    border-color: #bbf7d0 !important;
+  }
+
+  .inline-apply-btn:hover {
+    background: #bbf7d0 !important;
+  }
+
+  .inline-cancel-btn {
+    background: #fef2f2 !important;
+    color: #dc2626 !important;
+    border-color: #fecaca !important;
+  }
+
+  .inline-cancel-btn:hover {
+    background: #fecaca !important;
+  }
+
+  .inline-editor-textarea {
+    width: 100%;
+    min-height: 500px;
+    padding: 16px;
+    border: 2px solid #3b82f6;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1e293b;
+    background: #fafbfc;
+    resize: vertical;
+    box-sizing: border-box;
+    tab-size: 2;
+  }
+
+  .inline-editor-textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .loading svg {
+    animation: inline-spin 1s linear infinite;
+  }
+
+  @keyframes inline-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+</style>
+
+<script>
+  document.querySelectorAll('.inline-editor-wrapper').forEach((wrapper) => {
+    const el = wrapper as HTMLElement;
+    if (el.dataset.authenticated !== 'true') return;
+
+    const articleId = el.dataset.articleId!;
+    const editBtn = el.querySelector('.inline-edit-btn') as HTMLButtonElement;
+    const regenBtn = el.querySelector('.inline-regenerate-btn') as HTMLButtonElement;
+    const applyBtn = el.querySelector('.inline-apply-btn') as HTMLButtonElement;
+    const cancelBtn = el.querySelector('.inline-cancel-btn') as HTMLButtonElement;
+    const rendered = el.querySelector('.inline-editor-rendered') as HTMLElement;
+    const editing = el.querySelector('.inline-editor-editing') as HTMLElement;
+    const preview = el.querySelector('.inline-editor-preview') as HTMLElement;
+    const textarea = el.querySelector('.inline-editor-textarea') as HTMLTextAreaElement;
+
+    type EditorMode = 'view' | 'edit' | 'preview';
+    let mode: EditorMode = 'view';
+    let previewData: { title?: string; description?: string; content?: string } | null = null;
+
+    const setMode = (newMode: EditorMode) => {
+      mode = newMode;
+      rendered.hidden = mode !== 'view';
+      editing.hidden = mode !== 'edit';
+      preview.hidden = mode !== 'preview';
+
+      editBtn.classList.toggle('active', mode === 'edit');
+      editBtn.hidden = mode === 'preview';
+      regenBtn.hidden = mode !== 'view';
+      applyBtn.hidden = mode === 'view';
+      cancelBtn.hidden = mode === 'view';
+    };
+
+    // Edit mode
+    editBtn.addEventListener('click', () => {
+      if (mode === 'edit') {
+        setMode('view');
+      } else {
+        setMode('edit');
+        textarea.focus();
+      }
+    });
+
+    // Cancel
+    cancelBtn.addEventListener('click', () => {
+      setMode('view');
+      previewData = null;
+    });
+
+    // Save (from edit or preview mode)
+    applyBtn.addEventListener('click', async () => {
+      applyBtn.disabled = true;
+      applyBtn.classList.add('loading');
+
+      try {
+        const body: Record<string, string> = {};
+
+        if (mode === 'edit') {
+          body.content = textarea.value;
+        } else if (mode === 'preview' && previewData) {
+          if (previewData.title) body.title = previewData.title;
+          if (previewData.description) body.description = previewData.description;
+          if (previewData.content) body.content = previewData.content;
+        }
+
+        const res = await fetch(`/api/articles/${articleId}/apply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) throw new Error('Speichern fehlgeschlagen');
+        window.location.reload();
+      } catch {
+        alert('Speichern fehlgeschlagen');
+        applyBtn.disabled = false;
+        applyBtn.classList.remove('loading');
+      }
+    });
+
+    // Regenerate text
+    regenBtn.addEventListener('click', async () => {
+      regenBtn.disabled = true;
+      regenBtn.classList.add('loading');
+
+      try {
+        const res = await fetch(`/api/articles/${articleId}/regenerate-text`, {
+          method: 'POST',
+        });
+        if (!res.ok) throw new Error('Generierung fehlgeschlagen');
+
+        const data = await res.json();
+        previewData = { title: data.title, description: data.description, content: data.content };
+
+        // Show preview as raw markdown
+        preview.innerHTML = '';
+        const pre = document.createElement('pre');
+        pre.style.whiteSpace = 'pre-wrap';
+        pre.style.fontFamily = "'JetBrains Mono', ui-monospace, monospace";
+        pre.style.fontSize = '14px';
+        pre.style.lineHeight = '1.6';
+        pre.style.padding = '16px';
+        pre.style.background = '#f0fdf4';
+        pre.style.border = '2px solid #86efac';
+        pre.style.borderRadius = '8px';
+        pre.textContent = `# ${data.title}\n\n${data.description}\n\n${data.content}`;
+        preview.appendChild(pre);
+
+        setMode('preview');
+      } catch {
+        alert('Text-Generierung fehlgeschlagen');
+      } finally {
+        regenBtn.disabled = false;
+        regenBtn.classList.remove('loading');
+      }
+    });
+
+    // Tab key inserts spaces in textarea
+    textarea.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        textarea.value = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end);
+        textarea.selectionStart = textarea.selectionEnd = start + 2;
+      }
+    });
+
+    // Ctrl+S to save in edit mode
+    textarea.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (mode === 'edit') {
+          applyBtn.click();
+        }
+      }
+    });
+  });
+</script>

@@ -117,6 +117,11 @@ export default function ncaAiCms(
           prerender: false,
         });
         injectRoute({
+          pattern: '/api/articles/create',
+          entrypoint: 'nca-ai-cms-astro-plugin/api/articles/create.ts',
+          prerender: false,
+        });
+        injectRoute({
           pattern: '/api/articles/[id]',
           entrypoint: 'nca-ai-cms-astro-plugin/api/articles/[id].ts',
           prerender: false,

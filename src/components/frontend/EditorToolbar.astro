@@ -1,0 +1,353 @@
+---
+interface Props {
+  isAuthenticated?: boolean;
+}
+
+const { isAuthenticated } = Astro.props;
+---
+
+{isAuthenticated && (
+  <div id="editor-toolbar">
+    <!-- FAB Button -->
+    <button
+      id="editor-fab"
+      type="button"
+      aria-label="Neuen Artikel erstellen"
+      title="Neuen Artikel erstellen"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+    </button>
+
+    <!-- Panel -->
+    <div id="editor-panel" hidden>
+      <div class="editor-panel-header">
+        <h3>Neuer Artikel</h3>
+        <button type="button" id="editor-panel-close" aria-label="Schließen">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <form id="editor-create-form">
+        <label for="editor-input-topic">Thema oder Keyword</label>
+        <input
+          type="text"
+          id="editor-input-topic"
+          name="input"
+          placeholder="z.B. Laserreinigung"
+          required
+          autocomplete="off"
+        />
+
+        <details id="editor-details">
+          <summary>Zusätzliche Hinweise</summary>
+          <textarea
+            id="editor-input-notes"
+            name="notes"
+            rows="3"
+            placeholder="z.B. Fokus auf Kostenersparnis, Vergleich mit Sandstrahlen erwähnen"
+          ></textarea>
+        </details>
+
+        <div class="editor-panel-actions">
+          <button type="submit" id="editor-submit-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+            Generieren
+          </button>
+        </div>
+
+        <div id="editor-progress" hidden>
+          <div class="editor-progress-spinner"></div>
+          <span id="editor-progress-text">Artikel wird generiert...</span>
+        </div>
+
+        <div id="editor-error" hidden></div>
+      </form>
+    </div>
+  </div>
+)}
+
+<style>
+  #editor-toolbar {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 9999;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  #editor-fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #1e293b;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s, background 0.2s;
+  }
+
+  #editor-fab:hover {
+    background: #334155;
+    transform: scale(1.05);
+  }
+
+  #editor-fab.active {
+    transform: rotate(45deg);
+    background: #475569;
+  }
+
+  #editor-panel {
+    position: absolute;
+    bottom: 72px;
+    right: 0;
+    width: 360px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+  }
+
+  .editor-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .editor-panel-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .editor-panel-header button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #94a3b8;
+    padding: 4px;
+    border-radius: 4px;
+  }
+
+  .editor-panel-header button:hover {
+    color: #475569;
+    background: #f1f5f9;
+  }
+
+  #editor-create-form {
+    padding: 20px;
+  }
+
+  #editor-create-form label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    margin-bottom: 6px;
+  }
+
+  #editor-create-form input,
+  #editor-create-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1e293b;
+    background: #f8fafc;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+
+  #editor-create-form input:focus,
+  #editor-create-form textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: white;
+  }
+
+  #editor-create-form textarea {
+    resize: vertical;
+    font-family: inherit;
+  }
+
+  #editor-details {
+    margin-top: 12px;
+  }
+
+  #editor-details summary {
+    font-size: 13px;
+    color: #64748b;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  #editor-details summary:hover {
+    color: #3b82f6;
+  }
+
+  #editor-details textarea {
+    margin-top: 8px;
+  }
+
+  .editor-panel-actions {
+    margin-top: 16px;
+  }
+
+  #editor-submit-btn {
+    width: 100%;
+    padding: 10px 16px;
+    background: #1e293b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s;
+  }
+
+  #editor-submit-btn:hover {
+    background: #334155;
+  }
+
+  #editor-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  #editor-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    padding: 12px;
+    background: #f0f9ff;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #1e40af;
+  }
+
+  .editor-progress-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #bfdbfe;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: editor-spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes editor-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  #editor-error {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: #fef2f2;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #dc2626;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  @media (max-width: 480px) {
+    #editor-panel {
+      width: calc(100vw - 2rem);
+      right: -1rem;
+    }
+  }
+</style>
+
+<script>
+  const fab = document.getElementById('editor-fab') as HTMLButtonElement;
+  const panel = document.getElementById('editor-panel') as HTMLElement;
+  const closeBtn = document.getElementById('editor-panel-close') as HTMLButtonElement;
+  const form = document.getElementById('editor-create-form') as HTMLFormElement;
+  const submitBtn = document.getElementById('editor-submit-btn') as HTMLButtonElement;
+  const progress = document.getElementById('editor-progress') as HTMLElement;
+  const progressText = document.getElementById('editor-progress-text') as HTMLElement;
+  const errorDiv = document.getElementById('editor-error') as HTMLElement;
+  const topicInput = document.getElementById('editor-input-topic') as HTMLInputElement;
+  const notesInput = document.getElementById('editor-input-notes') as HTMLTextAreaElement;
+
+  if (fab && panel) {
+    const togglePanel = () => {
+      const isOpen = !panel.hidden;
+      panel.hidden = isOpen;
+      fab.classList.toggle('active', !isOpen);
+      if (!isOpen) {
+        topicInput?.focus();
+      }
+    };
+
+    fab.addEventListener('click', togglePanel);
+    closeBtn?.addEventListener('click', togglePanel);
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !panel.hidden) {
+        togglePanel();
+      }
+    });
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = topicInput.value.trim();
+      if (!input) return;
+
+      submitBtn.disabled = true;
+      errorDiv.hidden = true;
+      progress.hidden = false;
+      progressText.textContent = 'Artikel wird generiert...';
+
+      try {
+        const res = await fetch('/api/articles/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            input,
+            notes: notesInput?.value.trim() || undefined,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({ error: 'Unbekannter Fehler' }));
+          throw new Error(data.error || `Fehler ${res.status}`);
+        }
+
+        const data = await res.json();
+        progressText.textContent = 'Weiterleitung...';
+        window.location.href = `/articles/${data.slug}`;
+      } catch (err) {
+        errorDiv.textContent = err instanceof Error ? err.message : 'Generierung fehlgeschlagen';
+        errorDiv.hidden = false;
+        progress.hidden = true;
+        submitBtn.disabled = false;
+      }
+    });
+  }
+</script>

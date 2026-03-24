@@ -27,6 +27,7 @@ export interface UpdateContentOptions {
   title?: string;
   description?: string;
   content?: string;
+  imageAlt?: string;
 }
 
 export class ArticleService {
@@ -147,6 +148,7 @@ export class ArticleService {
       ...data,
       ...(options.title && { title: options.title }),
       ...(options.description && { description: options.description }),
+      ...(options.imageAlt && { imageAlt: options.imageAlt }),
     };
 
     // Use new content or keep existing
