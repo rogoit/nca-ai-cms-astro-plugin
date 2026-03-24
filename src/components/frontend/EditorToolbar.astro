@@ -1,13 +1,24 @@
 ---
 interface Props {
   isAuthenticated?: boolean;
+  currentPath?: string;
 }
 
-const { isAuthenticated } = Astro.props;
+const { isAuthenticated, currentPath = '' } = Astro.props;
+
+// Extract context from current path for smart defaults
+// /services/gleitschleifen → "Gleitschleifen"
+// /services/laserreinigung → "Laserreinigung"
+let pageContext = '';
+const serviceMatch = currentPath.match(/^\/services\/([^/]+)/);
+if (serviceMatch) {
+  const slug = serviceMatch[1];
+  pageContext = slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ');
+}
 ---
 
 {isAuthenticated && (
-  <div id="editor-toolbar">
+  <div id="editor-toolbar" data-page-context={pageContext}>
     <!-- FAB Button -->
     <button
       id="editor-fab"
@@ -33,13 +44,23 @@ const { isAuthenticated } = Astro.props;
         </button>
       </div>
 
+      {pageContext && (
+        <div class="editor-context-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          <span>Kontext: {pageContext}</span>
+        </div>
+      )}
+
       <form id="editor-create-form">
         <label for="editor-input-topic">Thema oder Keyword</label>
         <input
           type="text"
           id="editor-input-topic"
           name="input"
-          placeholder="z.B. Laserreinigung"
+          placeholder={pageContext ? `z.B. ${pageContext} Kosten, ${pageContext} Vorteile` : 'z.B. Laserreinigung'}
           required
           autocomplete="off"
         />
@@ -147,6 +168,20 @@ const { isAuthenticated } = Astro.props;
   .editor-panel-header button:hover {
     color: #475569;
     background: #f1f5f9;
+  }
+
+  .editor-context-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 20px;
+    padding: 8px 12px;
+    background: #eff6ff;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #1d4ed8;
+    margin-top: 12px;
   }
 
   #editor-create-form {
@@ -283,6 +318,7 @@ const { isAuthenticated } = Astro.props;
 </style>
 
 <script>
+  const toolbar = document.getElementById('editor-toolbar') as HTMLElement;
   const fab = document.getElementById('editor-fab') as HTMLButtonElement;
   const panel = document.getElementById('editor-panel') as HTMLElement;
   const closeBtn = document.getElementById('editor-panel-close') as HTMLButtonElement;
@@ -294,7 +330,9 @@ const { isAuthenticated } = Astro.props;
   const topicInput = document.getElementById('editor-input-topic') as HTMLInputElement;
   const notesInput = document.getElementById('editor-input-notes') as HTMLTextAreaElement;
 
-  if (fab && panel) {
+  if (fab && panel && toolbar) {
+    const pageContext = toolbar.dataset.pageContext || '';
+
     const togglePanel = () => {
       const isOpen = !panel.hidden;
       panel.hidden = isOpen;
@@ -307,12 +345,6 @@ const { isAuthenticated } = Astro.props;
     fab.addEventListener('click', togglePanel);
     closeBtn?.addEventListener('click', togglePanel);
 
-    // Close on Escape
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !panel.hidden) {
-        togglePanel();
-      }
-    });
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -325,12 +357,20 @@ const { isAuthenticated } = Astro.props;
       progressText.textContent = 'Artikel wird generiert...';
 
       try {
+        // Auto-add page context to notes if on a service page
+        let notes = notesInput?.value.trim() || '';
+        if (pageContext && !input.toLowerCase().includes(pageContext.toLowerCase())) {
+          notes = notes
+            ? `Kontext: ${pageContext}. ${notes}`
+            : `Artikel im Kontext von ${pageContext}`;
+        }
+
         const res = await fetch('/api/articles/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             input,
-            notes: notesInput?.value.trim() || undefined,
+            notes: notes || undefined,
           }),
         });
 

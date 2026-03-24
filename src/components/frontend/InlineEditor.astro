@@ -2,10 +2,12 @@
 interface Props {
   articleId: string;
   markdown: string;
+  title: string;
+  description: string;
   isAuthenticated?: boolean;
 }
 
-const { articleId, markdown, isAuthenticated } = Astro.props;
+const { articleId, markdown, title, description, isAuthenticated } = Astro.props;
 ---
 
 <div class="inline-editor-wrapper" data-article-id={articleId} data-authenticated={isAuthenticated ? 'true' : 'false'}>
@@ -66,9 +68,20 @@ const { articleId, markdown, isAuthenticated } = Astro.props;
       <slot />
     </div>
 
-    <!-- Markdown editor (hidden by default) -->
+    <!-- Editing form (hidden by default) -->
     <div class="inline-editor-editing" hidden>
-      <textarea class="inline-editor-textarea">{markdown}</textarea>
+      <div class="inline-editor-field">
+        <label class="inline-editor-label">Titel</label>
+        <input type="text" class="inline-editor-title-input" value={title} />
+      </div>
+      <div class="inline-editor-field">
+        <label class="inline-editor-label">Beschreibung</label>
+        <textarea class="inline-editor-desc-input" rows="2">{description}</textarea>
+      </div>
+      <div class="inline-editor-field">
+        <label class="inline-editor-label">Inhalt (Markdown)</label>
+        <textarea class="inline-editor-textarea">{markdown}</textarea>
+      </div>
     </div>
 
     <!-- Regenerated preview (hidden by default) -->
@@ -132,6 +145,46 @@ const { articleId, markdown, isAuthenticated } = Astro.props;
     background: #fecaca !important;
   }
 
+  .inline-editor-field {
+    margin-bottom: 12px;
+  }
+
+  .inline-editor-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
+  .inline-editor-title-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #3b82f6;
+    border-radius: 8px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    background: #fafbfc;
+    box-sizing: border-box;
+  }
+
+  .inline-editor-desc-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #3b82f6;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #334155;
+    background: #fafbfc;
+    resize: vertical;
+    box-sizing: border-box;
+    font-family: inherit;
+    line-height: 1.5;
+  }
+
   .inline-editor-textarea {
     width: 100%;
     min-height: 500px;
@@ -148,6 +201,8 @@ const { articleId, markdown, isAuthenticated } = Astro.props;
     tab-size: 2;
   }
 
+  .inline-editor-title-input:focus,
+  .inline-editor-desc-input:focus,
   .inline-editor-textarea:focus {
     outline: none;
     border-color: #2563eb;
@@ -180,6 +235,8 @@ const { articleId, markdown, isAuthenticated } = Astro.props;
     const rendered = el.querySelector('.inline-editor-rendered') as HTMLElement;
     const editing = el.querySelector('.inline-editor-editing') as HTMLElement;
     const preview = el.querySelector('.inline-editor-preview') as HTMLElement;
+    const titleInput = el.querySelector('.inline-editor-title-input') as HTMLInputElement;
+    const descInput = el.querySelector('.inline-editor-desc-input') as HTMLTextAreaElement;
     const textarea = el.querySelector('.inline-editor-textarea') as HTMLTextAreaElement;
 
     type EditorMode = 'view' | 'edit' | 'preview';
@@ -205,7 +262,7 @@ const { articleId, markdown, isAuthenticated } = Astro.props;
         setMode('view');
       } else {
         setMode('edit');
-        textarea.focus();
+        titleInput.focus();
       }
     });
 
@@ -224,6 +281,8 @@ const { articleId, markdown, isAuthenticated } = Astro.props;
         const body: Record<string, string> = {};
 
         if (mode === 'edit') {
+          body.title = titleInput.value.trim();
+          body.description = descInput.value.trim();
           body.content = textarea.value;
         } else if (mode === 'preview' && previewData) {
           if (previewData.title) body.title = previewData.title;
@@ -283,25 +342,5 @@ const { articleId, markdown, isAuthenticated } = Astro.props;
       }
     });
 
-    // Tab key inserts spaces in textarea
-    textarea.addEventListener('keydown', (e) => {
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        textarea.value = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end);
-        textarea.selectionStart = textarea.selectionEnd = start + 2;
-      }
-    });
-
-    // Ctrl+S to save in edit mode
-    textarea.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        if (mode === 'edit') {
-          applyBtn.click();
-        }
-      }
-    });
   });
 </script>

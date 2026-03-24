@@ -1,3 +1,43 @@
+# v1.1.1
+
+## Enhancement: Inline editing for title + description, context-aware toolbar
+
+### InlineEditor: title and description editing
+- New `title` and `description` props (required)
+- Edit mode now shows three fields: title input, description textarea, markdown textarea
+- All three saved in one apply call to `/api/articles/{id}/apply`
+- Title field gets focus first when entering edit mode
+- Ctrl+S works from any field (not just markdown textarea)
+
+### EditorToolbar: page context awareness
+- New `currentPath` prop — detects service pages and extracts topic
+- On `/services/gleitschleifen`: shows "Kontext: Gleitschleifen" badge in panel
+- Placeholder adapts: "z.B. Gleitschleifen Kosten, Gleitschleifen Vorteile"
+- Context auto-added to generation notes when topic doesn't already include it
+- Article generated from a service page gets that service as context in the prompt
+
+### Integration update
+
+InlineEditor now requires `title` and `description`:
+```astro
+<InlineEditor
+  articleId={articleSlug}
+  markdown={rawContent}
+  title={article.title}
+  description={article.description}
+  isAuthenticated={isAuthenticated}
+>
+  <!-- header + content as slot -->
+</InlineEditor>
+```
+
+EditorToolbar now accepts `currentPath`:
+```astro
+<EditorToolbar isAuthenticated={isAuthenticated} currentPath={Astro.url.pathname} />
+```
+
+---
+
 # v1.1.0
 
 ## Feature: Frontend editing — EditorToolbar, InlineEditor, create endpoint

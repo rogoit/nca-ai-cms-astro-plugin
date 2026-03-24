@@ -1,4 +1,6 @@
 ---
+import EditorToolbar from '../components/frontend/EditorToolbar.astro';
+
 interface Props {
   title: string;
   description?: string;
@@ -1139,6 +1141,7 @@ const isAuthenticated = !!authCookie?.value;
         </div>
       </div>
     </footer>
+    <EditorToolbar isAuthenticated={isAuthenticated} currentPath={currentPath} />
     <script>
       const logoutBtn = document.querySelector('.logout-btn');
       logoutBtn?.addEventListener('click', async () => {
