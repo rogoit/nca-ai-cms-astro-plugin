@@ -294,37 +294,40 @@ export function SettingsTab() {
         <div style={{ ...styles.plannerForm, flexDirection: 'row', alignItems: 'center' }}>
           <span style={{ ...styles.label, marginRight: 'auto' }}>Datenbank-Verwaltung</span>
           <a
-            href="/api/db/download"
+            href="/api/db/export"
             style={{ ...styles.editButton, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
           >
-            ↓ DB herunterladen
+            ↓ DB exportieren
           </a>
           <label style={{ ...styles.editButton, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', margin: 0 }}>
-            ↑ DB hochladen
+            ↑ DB importieren
             <input
               type="file"
-              accept=".db,.sqlite,.sqlite3"
+              accept=".json"
               style={styles.srOnly}
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                if (!confirm(`Datenbank "${file.name}" hochladen? Die aktuelle DB wird ueberschrieben.`)) {
+                if (!confirm(`Datenbank "${file.name}" importieren? Die aktuellen Daten werden ersetzt.`)) {
                   e.target.value = '';
                   return;
                 }
-                const formData = new FormData();
-                formData.append('database', file);
                 try {
-                  const res = await fetch('/api/db/upload', { method: 'POST', body: formData });
+                  const text = await file.text();
+                  JSON.parse(text);
+                  const res = await fetch('/api/db/import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: text,
+                  });
                   const data = await res.json();
                   if (res.ok) {
-                    alert('Datenbank hochgeladen. Seite wird neu geladen.');
-                    window.location.reload();
+                    loadData();
                   } else {
-                    alert('Fehler: ' + (data.error || 'Upload fehlgeschlagen'));
+                    alert('Fehler: ' + (data.error || 'Import fehlgeschlagen'));
                   }
                 } catch {
-                  alert('Upload fehlgeschlagen');
+                  alert('Import fehlgeschlagen. Bitte eine gueltige JSON-Datei waehlen.');
                 }
                 e.target.value = '';
               }}
