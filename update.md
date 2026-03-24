@@ -1,3 +1,14 @@
+# v1.1.2
+
+## Feature: Delete button in InlineEditor
+
+- Trash icon in the toolbar, right-aligned, subtle gray until hover (then red)
+- Confirm dialog before deleting: "Artikel wirklich löschen?"
+- Calls `DELETE /api/articles/{id}` then redirects to homepage
+- Only visible when authenticated
+
+---
+
 # v1.1.1
 
 ## Enhancement: Inline editing for title + description, context-aware toolbar
