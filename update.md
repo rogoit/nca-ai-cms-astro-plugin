@@ -1,3 +1,47 @@
+# v1.1.5
+
+## Refactor: Settings import/export with merge semantics
+
+### New: JSON settings export/import endpoints
+- `GET /api/db/export` — exports site settings and prompts as a JSON file download
+- `POST /api/db/import` — imports settings and/or prompts with upsert (merge) semantics
+
+### Import features
+- **Merge, not replace** — importing prompts won't delete your settings, importing settings won't delete your prompts
+- **Partial import** — payload only needs to include the sections you want to update (`siteSettings`, `prompts`, or both)
+- **No restart needed** — uses the live `astro:db` connection, no file replacement, no connection disruption
+- **Validation** — payload is validated before import with clear error messages
+
+### Breaking: SQLite file upload removed
+- `POST /api/db/upload` now returns `410 Gone` with migration instructions
+- The old SQLite file upload caused infinite redirect loops by breaking the live DB connection
+- Use `GET /api/db/export` + `POST /api/db/import` instead
+
+### Export format
+```json
+{
+  "version": 1,
+  "exportedAt": "2026-03-24T12:00:00.000Z",
+  "siteSettings": [{ "key": "content.branche", "value": "Tech", "updatedAt": "..." }],
+  "prompts": [{ "id": "p1", "name": "Blog", "category": "content", "promptText": "...", "updatedAt": "..." }]
+}
+```
+
+### Cleanup
+- Removed dead `dbUploadUtils.ts` and its tests
+- Upload test updated for 410 stub
+
+---
+
+# v1.1.3 / v1.1.4
+
+## Internal: DB upload refactoring (superseded by v1.1.5)
+- Extracted upload utilities to `dbUploadUtils.ts`
+- Added `DbTransferService` with JSON export/import
+- These versions contained intermediate work that was refined in v1.1.5
+
+---
+
 # v1.1.2
 
 ## Feature: Delete button in InlineEditor

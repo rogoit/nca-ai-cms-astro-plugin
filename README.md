@@ -85,6 +85,9 @@ ncaAiCms({
 | `/api/prompts` | Manage prompt templates |
 | `/api/scheduler` | Manage scheduled posts |
 | `/api/articles/*` | Article operations |
+| `/api/db/export` | Export settings + prompts as JSON |
+| `/api/db/import` | Import settings + prompts (merge/upsert) |
+| `/api/db/download` | Download raw SQLite database backup |
 
 All `/api/*` and `/editor` routes are protected by cookie-based authentication.
 
