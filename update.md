@@ -1,3 +1,23 @@
+# v1.1.6
+
+## Fix: reverse proxy compatibility
+
+### Removed: broken CSRF check in `/api/articles/create`
+- The origin comparison (`request.headers.get('origin')` vs `request.url`) fails behind reverse proxies (Traefik/Nginx) because `request.url` resolves to the internal container URL
+- Route is already protected by auth middleware — CSRF check was redundant
+- Fixes 403 Forbidden when generating articles in production
+
+### New: `getPublicOrigin()` utility
+- Resolves the correct external URL behind reverse proxies
+- Priority: `context.site` → `X-Forwarded-Proto`/`X-Forwarded-Host` → `context.url.origin`
+- Nginx already sets these headers on all proxy locations
+
+### Fixed: robots.txt and sitemap.xml URLs
+- Both files used `context.url.origin` which returned `http://127.0.0.1:4321` behind proxy
+- Now use `getPublicOrigin()` to produce correct external URLs
+
+---
+
 # v1.1.5
 
 ## Refactor: Settings import/export with merge semantics
