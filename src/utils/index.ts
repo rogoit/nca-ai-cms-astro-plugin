@@ -5,3 +5,11 @@ export {
   escapeHtml,
 } from "./sanitize.js";
 export { getEnvVariable } from "./envUtils.js";
+export {
+  validateSqliteHeader,
+  validateFileSize,
+  backupDatabase,
+  writeDatabaseFile,
+  getDbPath,
+  restartNodeProcess,
+} from "./dbUploadUtils.js";
