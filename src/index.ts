@@ -197,6 +197,16 @@ export default function ncaAiCms(
           entrypoint: 'nca-ai-cms-astro-plugin/api/db/upload.ts',
           prerender: false,
         });
+        injectRoute({
+          pattern: '/api/db/export',
+          entrypoint: 'nca-ai-cms-astro-plugin/api/db/export.ts',
+          prerender: false,
+        });
+        injectRoute({
+          pattern: '/api/db/import',
+          entrypoint: 'nca-ai-cms-astro-plugin/api/db/import.ts',
+          prerender: false,
+        });
 
         // Inject auth routes
         injectRoute({

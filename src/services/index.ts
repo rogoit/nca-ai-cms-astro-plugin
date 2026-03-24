@@ -32,5 +32,4 @@ export {
   type ValidationResult,
   type SiteSettingRow,
   type PromptRow,
-  type ScheduledPostRow,
 } from './DbTransferService';
