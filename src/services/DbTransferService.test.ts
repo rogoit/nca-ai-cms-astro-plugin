@@ -4,118 +4,101 @@ vi.mock('astro:db', () => ({
   db: {},
   SiteSettings: {},
   Prompts: {},
-  ScheduledPosts: {},
+  eq: vi.fn(),
 }));
 
 import { validateImportPayload, type DbTransferPayload } from './DbTransferService.js';
 
 describe('validateImportPayload', () => {
-  it('accepts a valid payload with all three tables', () => {
+  it('accepts a valid payload with both sections', () => {
     const payload: DbTransferPayload = {
       version: 1,
       exportedAt: '2026-03-24T12:00:00.000Z',
-      tables: {
-        siteSettings: [{ key: 'content.branche', value: 'Tech', updatedAt: '2026-03-24T12:00:00.000Z' }],
-        prompts: [],
-        scheduledPosts: [],
-      },
+      siteSettings: [{ key: 'content.branche', value: 'Tech', updatedAt: '2026-03-24T12:00:00.000Z' }],
+      prompts: [{ id: 'p1', name: 'Blog', category: 'content', promptText: 'Write...', updatedAt: '2026-03-24T12:00:00.000Z' }],
     };
     const result = validateImportPayload(payload);
     expect(result.valid).toBe(true);
-    expect(result.errors.length).toBe(0);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it('accepts payload with only siteSettings (partial import)', () => {
+    const result = validateImportPayload({
+      version: 1,
+      exportedAt: '2026-03-24T12:00:00.000Z',
+      siteSettings: [{ key: 'k', value: 'v', updatedAt: '2026-03-24T12:00:00.000Z' }],
+    });
+    expect(result.valid).toBe(true);
+  });
+
+  it('accepts payload with only prompts (partial import)', () => {
+    const result = validateImportPayload({
+      version: 1,
+      exportedAt: '2026-03-24T12:00:00.000Z',
+      prompts: [{ id: 'p1', name: 'n', category: 'c', promptText: 't', updatedAt: '2026-03-24T12:00:00.000Z' }],
+    });
+    expect(result.valid).toBe(true);
+  });
+
+  it('rejects payload with neither siteSettings nor prompts', () => {
+    const result = validateImportPayload({ version: 1, exportedAt: '2026-03-24T12:00:00.000Z' });
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.includes('at least one'))).toBe(true);
   });
 
   it('rejects payload without version field', () => {
-    const result = validateImportPayload({ tables: {} } as any);
+    const result = validateImportPayload({ siteSettings: [] });
     expect(result.valid).toBe(false);
-    expect(result.errors.some((e: string) => e.includes('version'))).toBe(true);
+    expect(result.errors.some(e => e.includes('version'))).toBe(true);
   });
 
-  it('rejects payload with unsupported version', () => {
+  it('rejects unsupported version', () => {
     const result = validateImportPayload({
       version: 99,
       exportedAt: '2026-03-24T12:00:00.000Z',
-      tables: { siteSettings: [], prompts: [], scheduledPosts: [] },
+      siteSettings: [],
     });
     expect(result.valid).toBe(false);
-    expect(result.errors.some((e: string) => e.includes('version'))).toBe(true);
+    expect(result.errors.some(e => e.includes('version'))).toBe(true);
   });
 
-  it('rejects payload without tables field', () => {
-    const result = validateImportPayload({ version: 1 } as any);
-    expect(result.valid).toBe(false);
-    expect(result.errors.some((e: string) => e.includes('tables'))).toBe(true);
-  });
-
-  it('rejects payload with missing table keys', () => {
+  it('rejects siteSettings row missing key', () => {
     const result = validateImportPayload({
       version: 1,
       exportedAt: '2026-03-24T12:00:00.000Z',
-      tables: { siteSettings: [] },
-    } as any);
+      siteSettings: [{ value: 'v', updatedAt: '2026-03-24T12:00:00.000Z' }],
+    });
     expect(result.valid).toBe(false);
-    expect(result.errors.some((e: string) => e.includes('prompts'))).toBe(true);
-    expect(result.errors.some((e: string) => e.includes('scheduledPosts'))).toBe(true);
+    expect(result.errors.some(e => e.includes('siteSettings'))).toBe(true);
   });
 
-  it('rejects siteSettings row missing required key field', () => {
-    const payload: DbTransferPayload = {
+  it('rejects prompts row missing id', () => {
+    const result = validateImportPayload({
       version: 1,
       exportedAt: '2026-03-24T12:00:00.000Z',
-      tables: {
-        siteSettings: [{ value: 'Tech', updatedAt: '2026-03-24T12:00:00.000Z' } as any],
-        prompts: [],
-        scheduledPosts: [],
-      },
-    };
-    const result = validateImportPayload(payload);
+      prompts: [{ name: 'n', category: 'c', promptText: 't', updatedAt: '2026-03-24T12:00:00.000Z' }],
+    });
     expect(result.valid).toBe(false);
-    expect(result.errors.some((e: string) => e.includes('siteSettings'))).toBe(true);
+    expect(result.errors.some(e => e.includes('prompts'))).toBe(true);
   });
 
-  it('rejects prompts row missing required id field', () => {
-    const payload: DbTransferPayload = {
+  it('accepts empty arrays (valid but no-op)', () => {
+    const result = validateImportPayload({
       version: 1,
       exportedAt: '2026-03-24T12:00:00.000Z',
-      tables: {
-        siteSettings: [],
-        prompts: [{ name: 'test', category: 'c', promptText: 'p', updatedAt: '2026-03-24T12:00:00.000Z' } as any],
-        scheduledPosts: [],
-      },
-    };
-    const result = validateImportPayload(payload);
-    expect(result.valid).toBe(false);
-    expect(result.errors.some((e: string) => e.includes('prompts'))).toBe(true);
-  });
-
-  it('rejects scheduledPosts row missing required scheduledDate', () => {
-    const payload: DbTransferPayload = {
-      version: 1,
-      exportedAt: '2026-03-24T12:00:00.000Z',
-      tables: {
-        siteSettings: [],
-        prompts: [],
-        scheduledPosts: [{
-          id: '1', input: 'x', inputType: 'text', status: 'pending', createdAt: '2026-03-24T12:00:00.000Z',
-        } as any],
-      },
-    };
-    const result = validateImportPayload(payload);
-    expect(result.valid).toBe(false);
-    expect(result.errors.some((e: string) => e.includes('scheduledPosts'))).toBe(true);
-  });
-
-  it('accepts payload with empty tables (clears all data)', () => {
-    const payload: DbTransferPayload = {
-      version: 1,
-      exportedAt: '2026-03-24T12:00:00.000Z',
-      tables: {
-        siteSettings: [],
-        prompts: [],
-        scheduledPosts: [],
-      },
-    };
-    const result = validateImportPayload(payload);
+      siteSettings: [],
+      prompts: [],
+    });
     expect(result.valid).toBe(true);
+  });
+
+  it('rejects non-array siteSettings', () => {
+    const result = validateImportPayload({
+      version: 1,
+      exportedAt: '2026-03-24T12:00:00.000Z',
+      siteSettings: 'not an array',
+    });
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.includes('siteSettings'))).toBe(true);
   });
 });
