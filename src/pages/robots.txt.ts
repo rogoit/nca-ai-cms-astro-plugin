@@ -1,4 +1,5 @@
 import type { APIContext } from 'astro';
+import { getPublicOrigin } from '../utils/originUtils.js';
 
 export function generateRobotsTxt(siteUrl: string): string {
   const base = siteUrl.replace(/\/+$/, '');
@@ -14,7 +15,7 @@ Sitemap: ${base}/sitemap.xml
 }
 
 export function GET(context: APIContext): Response {
-  const siteUrl = context.site?.toString() ?? context.url.origin;
+  const siteUrl = getPublicOrigin(context);
   const body = generateRobotsTxt(siteUrl);
 
   return new Response(body, {

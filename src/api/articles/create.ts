@@ -19,13 +19,6 @@ const CreateArticleSchema = z.object({
 // POST /api/articles/create - Generate content + image and save in one call
 export const POST: APIRoute = async ({ request }) => {
   try {
-    // CSRF: reject cross-origin requests
-    const origin = request.headers.get('origin');
-    const requestUrl = new URL(request.url);
-    if (origin && new URL(origin).origin !== requestUrl.origin) {
-      return jsonError('Forbidden', 403);
-    }
-
     let body: unknown;
     try {
       body = await request.json();

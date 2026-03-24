@@ -1,6 +1,7 @@
 import type { APIContext } from 'astro';
 import { ArticleService } from '../services/ArticleService';
 import type { ArticleData } from '../services/ArticleService';
+import { getPublicOrigin } from '../utils/originUtils.js';
 
 const STATIC_PAGES = ['/', '/impressum', '/ueber-ai-cms'];
 
@@ -43,7 +44,7 @@ ${[...staticEntries, ...articleEntries].join('\n')}
 }
 
 export async function GET(context: APIContext): Promise<Response> {
-  const siteUrl = context.site?.toString() ?? context.url.origin;
+  const siteUrl = getPublicOrigin(context);
   const service = new ArticleService();
   const articles = await service.list();
 
