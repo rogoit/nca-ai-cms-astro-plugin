@@ -1,3 +1,67 @@
+# v1.1.0
+
+## Feature: Frontend editing — EditorToolbar, InlineEditor, create endpoint
+
+### New: `EditorToolbar.astro` component
+- Floating action button (FAB) in bottom-right corner, visible when authenticated
+- Click opens a compact panel with topic input + optional notes textarea
+- Submits to new `/api/articles/create` endpoint
+- Shows progress spinner during generation (~30-60s)
+- On success, redirects to the new article page
+- Responsive: full-width panel on mobile
+- Keyboard support: Escape to close
+
+### New: `InlineEditor.astro` component
+- Wraps article content with edit/regenerate controls when authenticated
+- Pencil button switches rendered HTML to a monospace markdown textarea
+- Regenerate button fetches new content via `/api/articles/{id}/regenerate-text` and shows preview
+- Apply button saves changes via `/api/articles/{id}/apply`
+- Cancel button reverts to rendered view
+- Keyboard support: Ctrl+S to save, Tab inserts spaces in textarea
+
+### New: `POST /api/articles/create` endpoint
+- Generates content + hero image and saves both in one call
+- Request: `{ input: string, notes?: string }`
+- Response: `{ success: true, slug: string, articleId: string, title: string }`
+- Notes are appended as "Hinweise" to the generation prompt
+- Image generation failure is non-fatal — article saves without image
+- Returns slug path for client-side redirect
+
+### Changed: `ArticleService.updateContent()` now supports `imageAlt`
+- `UpdateContentOptions` interface extended with optional `imageAlt` field
+- Frontmatter update includes imageAlt when provided
+
+### New export: `./components/frontend/*`
+- All frontend components (EditorToolbar, InlineEditor, HeroImage, etc.) are now importable
+
+### Integration in project
+
+In `Layout.astro`:
+```astro
+---
+import EditorToolbar from 'nca-ai-cms-astro-plugin/components/frontend/EditorToolbar.astro';
+const isAuthenticated = !!Astro.cookies.get('editor-auth')?.value;
+---
+<!-- before </body> -->
+<EditorToolbar isAuthenticated={isAuthenticated} />
+```
+
+In `articles/[...slug].astro`:
+```astro
+---
+import InlineEditor from 'nca-ai-cms-astro-plugin/components/frontend/InlineEditor.astro';
+import HeroImage from 'nca-ai-cms-astro-plugin/components/frontend/HeroImage.astro';
+---
+<HeroImage articleId={articleSlug} alt={article.imageAlt || article.title} isAuthenticated={isAuthenticated} />
+<InlineEditor articleId={articleSlug} markdown={rawContent} isAuthenticated={isAuthenticated}>
+  <div class="prose" set:html={htmlContent} />
+</InlineEditor>
+```
+
+Replace the custom regenerate buttons and scripts in the article page — the plugin components handle everything.
+
+---
+
 # v1.0.18
 
 ## Fix: DB upload reconnects client after file replacement
