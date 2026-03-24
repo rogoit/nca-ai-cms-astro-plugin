@@ -1,23 +1,15 @@
 import type { APIRoute } from 'astro';
-import * as fs from 'fs/promises';
-import * as path from 'path';
 import { jsonResponse, jsonError } from '../_utils';
-// @ts-ignore - resolved by Astro build pipeline
-import { db } from 'astro:db';
+import {
+  validateSqliteHeader,
+  validateFileSize,
+  backupDatabase,
+  writeDatabaseFile,
+  getDbPath,
+  restartNodeProcess,
+} from '../../utils/dbUploadUtils.js';
 
 const MAX_DB_SIZE = 50 * 1024 * 1024; // 50 MB
-
-function getDbPath(): string {
-  const envPath = process.env.ASTRO_DATABASE_FILE;
-  if (envPath) {
-    const resolved = path.resolve(process.cwd(), envPath);
-    if (!resolved.startsWith(process.cwd())) {
-      throw new Error('Invalid database path');
-    }
-    return resolved;
-  }
-  return path.join(process.cwd(), '.astro', 'content.db');
-}
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -34,7 +26,7 @@ export const POST: APIRoute = async ({ request }) => {
         return jsonError('No database file provided. Use field name "database".', 400);
       }
 
-      if (file.size > MAX_DB_SIZE) {
+      if (!validateFileSize(file.size, MAX_DB_SIZE)) {
         return jsonError('File too large. Maximum 50 MB.', 413);
       }
 
@@ -44,42 +36,28 @@ export const POST: APIRoute = async ({ request }) => {
       const arrayBuffer = await request.arrayBuffer();
       dbBuffer = Buffer.from(arrayBuffer);
 
-      if (dbBuffer.length > MAX_DB_SIZE) {
+      if (!validateFileSize(dbBuffer.length, MAX_DB_SIZE)) {
         return jsonError('File too large. Maximum 50 MB.', 413);
       }
     } else {
       return jsonError('Invalid content type. Use multipart/form-data or application/octet-stream.', 400);
     }
 
-    // SQLite validation
-    const header = dbBuffer.subarray(0, 16).toString('utf8');
-    if (!header.startsWith('SQLite format 3')) {
+    if (!validateSqliteHeader(dbBuffer)) {
       return jsonError('Invalid file: not a SQLite database.', 400);
     }
 
-    // Backup current DB before overwriting
-    try {
-      await fs.copyFile(dbPath, `${dbPath}.backup`);
-    } catch {
-      // No existing DB to backup
-    }
+    await backupDatabase(dbPath);
+    await writeDatabaseFile(dbPath, dbBuffer);
 
-    await fs.writeFile(dbPath, dbBuffer);
-
-    // Reconnect DB client to pick up the new file
-    try {
-      const client = (db as any).$client;
-      if (client?.close && client?.reconnect) {
-        await client.close();
-        await client.reconnect();
-      }
-    } catch {
-      // Reconnect not available — manual restart needed
-    }
+    // Restart Node process so the new DB is loaded fresh
+    restartNodeProcess();
 
     return jsonResponse({
       success: true,
       size: dbBuffer.length,
+      message: 'Database uploaded. Server restarting...',
+      deprecated: 'Use POST /api/db/import with JSON payload instead. The SQLite file upload causes connection issues and will be removed in a future version.',
     });
   } catch {
     return jsonError('Database upload failed', 500);
